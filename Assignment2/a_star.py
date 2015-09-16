@@ -7,6 +7,8 @@ class Node:
 		self.location = location
 		if heuristic == 1:
 			self.heuristic = heuristic_1(goal(world),location)
+		if heuristic == 2:
+			self.heuristic = heuristic_2(world,location)
 		self.f = None
 		self.g = 0
 		self.parent = None
@@ -44,6 +46,10 @@ def adjacent(world,x,y):
 # Heuristic 1 is manhattan distance.
 def heuristic_1(goal,square):
 	return abs(goal[0] - square[0]) + abs(goal[1] - square[1])
+
+# For now, heuristic_2 just causes the algorithm to reduce to Dijkstra's algorithm
+def heuristic_2(world,square):
+	return 0
 
 def cost(l,d):
 	if world[d[1]][d[0]] == '2':
@@ -91,8 +97,8 @@ def astar(world,heuristic):
 			adjacentnodes = []
 			for l in adjacent(world,node.location[0],node.location[1]):
 				newnode = Node(world,l,heuristic)
-				newnode.f = f(cost(node.location,l),newnode.heuristic)
 				newnode.g = node.g + cost(node.location,l)
+				newnode.f = f(newnode.g,newnode.heuristic)
 				adjacentnodes.append(newnode)
 			# Check whether we need to add adjacent nodes to
 			# open set or not
