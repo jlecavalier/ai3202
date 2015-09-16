@@ -1,5 +1,6 @@
 import csv
 import argparse
+import random
 
 # Nodes in the search tree created by A*
 class Node:
@@ -9,8 +10,10 @@ class Node:
 			self.heuristic = heuristic_1(goal(world),location)
 		if heuristic == 2:
 			self.heuristic = heuristic_2(world,location)
-		self.f = None
-		self.g = 0
+		if heuristic == 3:
+			self.heuristic = heuristic_3()
+		self.f = float('inf')
+		self.g = float('inf')
 		self.parent = None
 
 # Returns a matrix representation of the world given by file f.
@@ -47,8 +50,19 @@ def adjacent(world,x,y):
 def heuristic_1(goal,square):
 	return abs(goal[0] - square[0]) + abs(goal[1] - square[1])
 
-# For now, heuristic_2 just causes the algorithm to reduce to Dijkstra's algorithm
+# heuristic 2 is a little more complicated
 def heuristic_2(world,square):
+	h = 0
+	for i in range(square[0],len(world[0])):
+		for j in range(0,len(world)):
+			if world[j][i] == '1':
+				h = h + 1
+			if world[j][i] == '2':
+				h = h + 2
+	return h
+
+# Dijkstra's algorithm
+def heuristic_3():
 	return 0
 
 def cost(l,d):
@@ -65,8 +79,8 @@ def cost(l,d):
 		tc = tc + 10
 	return tc
 
-def f(cost,heuristic):
-	return cost + heuristic
+def f(g,h):
+	return g + h
 
 def astar(world,heuristic):
 	# Setup
@@ -74,18 +88,26 @@ def astar(world,heuristic):
 	closedset = {}
 	startnode = Node(world,start(world),heuristic)
 	startnode.f = f(0,startnode.heuristic)
+	startnode.g = 0
 	openset[(start(world)[0],start(world)[1])] = startnode
 	done = False
 	# find the minimum f in the adjacent set
-	while openset != {} and not done:
+	while openset != {} and (not done):
+		#waste = raw_input("")
 		fmin = float('inf')
 		node = None
 		node_n = None
+		#print("OPENSET F VALUES:")
 		for n in openset.keys():
+			#print(openset[n]).f
 			if (openset[n]).f <= fmin:
+				fmin = (openset[n]).f
 				node = openset[n]
 				node_n = n
 		# Remove minimum f from openset
+		#print("SELECTED:")
+		#print(node.location)
+		#print(node.f)
 		del openset[node_n]
 		closedset[node_n] = node
 		# If we have added the goal node to the closed set, then
@@ -153,7 +175,7 @@ if __name__ == "__main__":
 	argparser = argparse.ArgumentParser()
 	argparser.add_argument("--f", help="txt file containing world data",
 		                   type=str, default="none.txt", required=True)
-	argparser.add_argument("--h", help="heuristic function (1 or 2)",
+	argparser.add_argument("--h", help="heuristic function (1, 2, or 3)\n1: Manhattan distance\n2: Obstacles in range\n3: Dikstra's algorithm",
 		                   type=int, default=1, required=True)
 
 	args = argparser.parse_args()
