@@ -8,6 +8,7 @@ class Node:
 		if heuristic == 1:
 			self.heuristic = heuristic_1(goal(world),location)
 		self.f = None
+		self.g = 0
 		self.parent = None
 
 # Returns a matrix representation of the world given by file f.
@@ -75,13 +76,9 @@ def astar(world,heuristic):
 		node = None
 		node_n = None
 		for n in openset.keys():
-			if (openset[n]).f < fmin:
+			if (openset[n]).f <= fmin:
 				node = openset[n]
 				node_n = n
-		# If we didn't find a minimum f, then we can't move anywhere.
-		if node == None:
-			print("No solution was found!")
-			return None
 		# Remove minimum f from openset
 		del openset[node_n]
 		closedset[node_n] = node
@@ -95,20 +92,56 @@ def astar(world,heuristic):
 			for l in adjacent(world,node.location[0],node.location[1]):
 				newnode = Node(world,l,heuristic)
 				newnode.f = f(cost(node.location,l),newnode.heuristic)
+				newnode.g = node.g + cost(node.location,l)
 				adjacentnodes.append(newnode)
 			# Check whether we need to add adjacent nodes to
 			# open set or not
 			for n in adjacentnodes:
-				if (n.location[0],n.location[1]) in openset:
-					if n.f <= (openset[(n.location[0],n.location[1])]).f:
-						(openset[(n.location[0],n.location[1])]).f = n.f
-					(openset[(n.location[0],n.location[1])]).parent = node
-				else:
-					if (n.location[0],n.location[1]) not in closedset:
+				# If the node we're evaluating is a wall or it is already
+				# in the closed set, we don't need to evaluate it at all.
+				if ((n.location[0],n.location[1]) not in closedset) and (world[n.location[1]][n.location[0]] != '2'):
+					# If the node we're evaluating isn't in the open set,
+					# add it to the open set and set its parent to the current
+					# node.
+					if (n.location[0],n.location[1]) not in openset:
 						openset[(n.location[0],n.location[1])] = n
+						n.parent = node
+					# If the node we're evaluating is already in the open set,
+					# then check if the cost of getting to that node from the
+					# current node is less than the cost already calculated
+					# for that node. If it is, update accordingly.
+					else:
+						if n.g < (openset[(n.location[0],n.location[1])]).g:
+							(openset[(n.location[0],n.location[1])]).g = n.g
+							(openset[(n.location[0],n.location[1])]).f = n.f
+							(openset[(n.location[0],n.location[1])]).parent = node
 	# If we made it out of the loop, we found a solution!
-	print("A solution was found!")
-	return closedset[(goal(world)[0],goal(world)[1])]
+	if (goal(world)[0],goal(world)[1]) in closedset:
+		print("A solution was found!\n")
+		print("Number of locations evaluated:")
+		print(len(closedset))
+		return closedset[(goal(world)[0],goal(world)[1])]
+	else:
+		print("No solution was found!")
+		return None
+
+def calculate_results(goal):
+	if goal == None:
+		print("\nI'm so sad now :(")
+	else:
+		pathlist_reversed = []
+		curr = goal
+		while curr != None:
+			pathlist_reversed.append(curr)
+			curr = curr.parent
+		pathlist = pathlist_reversed[::-1]
+		print("\nPath taken:")
+		for i in range(len(pathlist)):
+			print(pathlist[i].location)
+		print("\nCost of path")
+		print(goal.g)
+		print("")
+
 
 if __name__ == "__main__":
 	argparser = argparse.ArgumentParser()
@@ -121,4 +154,4 @@ if __name__ == "__main__":
 	world = matrix_of_file(open(args.f))
 
 	cs = astar(world,args.h)
-	print(cs)
+	calculate_results(cs)
