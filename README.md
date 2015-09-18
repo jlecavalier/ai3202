@@ -12,9 +12,11 @@ Generally, my heuristic performs better than Manhattan distance. It always finds
 
 For world 1, the results are as follows:
 MANHATTAN DISTANCE:
-heuristic: 1
+
 62 nodes evaluated
+
 Path:
+
 [0, 7]
 [1, 7]
 [2, 7]
@@ -27,11 +29,15 @@ Path:
 [7, 1]
 [8, 0]
 [9, 0]
+
 130 for cost
 
 MY HEURISTIC:
+
 58 nodes evaluated
+
 path:
+
 [0, 7]
 [1, 7]
 [2, 7]
@@ -44,12 +50,16 @@ path:
 [8, 2]
 [9, 1]
 [9, 0]
+
 130 for cost
 
 For world 2, the results are as follows:
 MANHATTAN DISTANCE:
+
 60 nodes evaluated
+
 path:
+
 [0, 7]
 [1, 7]
 [2, 7]
@@ -64,11 +74,15 @@ path:
 [7, 0]
 [8, 0]
 [9, 0]
+
 142 for cost
 
 MY HEURISTIC:
-54 nodes evaluated
+
+54 nodes evaluated.
+
 path:
+
 [0, 7]
 [1, 7]
 [2, 7]
@@ -83,4 +97,5 @@ path:
 [7, 0]
 [8, 0]
 [9, 0]
+
 142 for cost
