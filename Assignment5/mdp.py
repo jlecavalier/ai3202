@@ -56,7 +56,7 @@ def matrix_of_file(f):
 	mat = []
 	for line in f:
 		mat.append(line[0:-1].split(" "))
-	return mat[0:-1]
+	return mat
 
 def generate_world(mat):
 	world = []
@@ -248,9 +248,9 @@ def display_results(world):
 	starts = start(world)
 	goals = goal(world)
 	state = world[starts[0]][starts[1]]
-	print("Optimal path found!\n\n")
+	print("Solution found!\n")
 	while state != world[goals[0]][goals[1]]:
-		print("Location: (%d,%d)\nUtility: %.4f\nAction: %s\n\n" % (state.location[0],state.location[1],state.utility,state.action))
+		print("Location: (%d,%d)\nUtility: %.4f\nAction: %s\n" % (state.location[0],state.location[1],state.utility,state.action))
 		if state.action == LEFT:
 			state = world[state.location[0]][state.location[1]-1]
 		elif state.action == RIGHT:
@@ -266,7 +266,7 @@ if __name__ == "__main__":
 	argparser.add_argument("--f", help="txt file containing world data",
 		                   type=str, default="none.txt", required=True)
 	argparser.add_argument("--e", help="epsilon value",
-		                   type=int, default=0.5, required=False)
+		                   type=float, default=0.5, required=False)
 
 	args = argparser.parse_args()
 
