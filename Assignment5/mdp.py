@@ -94,6 +94,142 @@ def adjacent(location):
 			adj.append(world[x][y+1])
 	return adj
 
+def get_action_vec(state):
+	global world
+	action = NOTHING
+	max_expected_util = float('-inf')
+	r = state.location[0]
+	c = state.location[1]
+	# LEFT
+	bigsum = 0
+	if c-1 >= 0:
+		if world[r][c-1] in state.adjacent:
+			bigsum += 0.8 * world[r][c-1].utility
+		else:
+			bigsum += 0.8 * world[r][c].utility
+	else:
+		bigsum += 0.8 * world[r][c].utility
+	if r+1 < len(world):
+		if world[r+1][c] in state.adjacent:
+			bigsum += 0.1 * world[r+1][c].utility
+		else:
+			bigsum += 0.1 * world[r][c].utility
+	else:
+		bigsum += 0.1 * world[r][c].utility
+	if r-1 >= 0:
+		if world[r-1][c] in state.adjacent:
+			bigsum += 0.1 * world[r-1][c].utility
+		else:
+			bigsum += 0.1 * world[r][c].utility
+	else:
+		bigsum += 0.1 * world[r][c].utility
+	if bigsum >= max_expected_util:
+		max_expected_util = bigsum
+		action = LEFT
+
+	# RIGHT
+	bigsum = 0
+	if c+1 < len(world[0]):
+		if world[r][c+1] in state.adjacent:
+			bigsum += 0.8 * world[r][c+1].utility
+		else:
+			bigsum += 0.8 * world[r][c].utility
+	else:
+		bigsum += 0.8 * world[r][c].utility
+	if r+1 < len(world):
+		if world[r+1][c] in state.adjacent:
+			bigsum += 0.1 * world[r+1][c].utility
+		else:
+			bigsum += 0.1 * world[r][c].utility
+	else:
+		bigsum += 0.1 * world[r][c].utility
+	if r-1 >= 0:
+		if world[r-1][c] in state.adjacent:
+			bigsum += 0.1 * world[r-1][c].utility
+		else:
+			bigsum += 0.1 * world[r][c].utility
+	else:
+		bigsum += 0.1 * world[r][c].utility
+	if bigsum >= max_expected_util:
+		max_expected_util = bigsum
+		action = RIGHT
+
+	# UP
+	bigsum = 0
+	if r-1 >= 0:
+		if world[r-1][c] in state.adjacent:
+			bigsum += 0.8 * world[r-1][c].utility
+		else:
+			bigsum += 0.8 * world[r][c].utility
+	else:
+		bigsum += 0.8 * world[r][c].utility
+	if c-1 >= 0:
+		if world[r][c-1] in state.adjacent:
+			bigsum += 0.1 * world[r][c-1].utility
+		else:
+			bigsum += 0.1 * world[r][c].utility
+	else:
+		bigsum += 0.1 * world[r][c].utility
+	if c+1 < len(world[0]):
+		if world[r][c+1] in state.adjacent:
+			bigsum += 0.1 * world[r][c+1].utility
+		else:
+			bigsum += 0.1 * world[r][c].utility
+	else:
+		bigsum += 0.1 * world[r][c].utility
+	if bigsum >= max_expected_util:
+		max_expected_util = bigsum
+		action = UP
+
+	# DOWN
+	bigsum = 0
+	if r+1 < len(world):
+		if world[r+1][c] in state.adjacent:
+			bigsum += 0.8 * world[r+1][c].utility
+		else:
+			bigsum += 0.8 * world[r][c].utility
+	else:
+		bigsum += 0.8 * world[r][c].utility
+	if c-1 >= 0:
+		if world[r][c-1] in state.adjacent:
+			bigsum += 0.1 * world[r][c-1].utility
+		else:
+			bigsum += 0.1 * world[r][c].utility
+	else:
+		bigsum += 0.1 * world[r][c].utility
+	if c+1 < len(world[0]):
+		if world[r][c+1] in state.adjacent:
+			bigsum += 0.1 * world[r][c+1].utility
+		else:
+			bigsum += 0.1 * world[r][c].utility
+	else:
+		bigsum += 0.1 * world[r][c].utility
+	if bigsum >= max_expected_util:
+		max_expected_util = bigsum
+		action = DOWN
+
+	return (max_expected_util, action)
+
+
+
+def val_iteration(epsilon):
+	global world
+	delta = float('inf')
+	first = True
+	next_world = world
+	while delta > epsilon * ((1 - DISCOUNT)/DISCOUNT):
+		delta = 0
+		for i in range(len(world)):
+			for j in range(len(world[0])):
+				action_vec = get_action_vec(world[i][j])
+				next_world[i][j].utility = world[i][j].reward + (DISCOUNT * action_vec[0])
+				next_world[i][j].action = action_vec[1]
+				if abs(world[i][j].utility - next_world[i][j].utility) > delta:
+					delta = abs(world[i][j].utility - next_world[i][j].utility)
+		world = next_world
+
+
+
 if __name__ == "__main__":
 	argparser = argparse.ArgumentParser()
 	argparser.add_argument("--f", help="txt file containing world data",
@@ -105,3 +241,5 @@ if __name__ == "__main__":
 
 	w_mat = matrix_of_file(open(args.f))
 	generate_world(w_mat)
+
+	val_iteration(args.e)
