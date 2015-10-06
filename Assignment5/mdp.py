@@ -20,9 +20,6 @@ APPLE = '50'
 # Discount factor macro
 DISCOUNT = 0.9
 
-# Global world variable
-world = []
-
 # States represent each square of the map
 class State:
 	def __init__(self,location,value):
@@ -62,6 +59,7 @@ def matrix_of_file(f):
 	return mat[0:-1]
 
 def generate_world(mat):
+	world = []
 	for i in range(len(mat)):
 		world.append(list())
 		for j in range(len(mat[0])):
@@ -69,14 +67,19 @@ def generate_world(mat):
 
 	for ii in world:
 		for jj in ii:
-			jj.adjacent = adjacent(jj.location)
+			jj.adjacent = adjacent(jj.location,world)
+
+	return world
 
 # Returns the start square of the world
 def start(world):
-	return [0,len(world)-1]
+	return [len(world)-1,0]
+
+def goal(world):
+	return [0,len(world[0])-1]
 
 # Returns a list of all adjacent squares to the given square
-def adjacent(location):
+def adjacent(location,world):
 	adj = []
 	x = location[0]
 	y = location[1]
@@ -94,8 +97,7 @@ def adjacent(location):
 			adj.append(world[x][y+1])
 	return adj
 
-def get_action_vec(state):
-	global world
+def get_action_vec(state,world):
 	action = NOTHING
 	max_expected_util = float('-inf')
 	r = state.location[0]
@@ -154,33 +156,6 @@ def get_action_vec(state):
 		max_expected_util = bigsum
 		action = RIGHT
 
-	# UP
-	bigsum = 0
-	if r-1 >= 0:
-		if world[r-1][c] in state.adjacent:
-			bigsum += 0.8 * world[r-1][c].utility
-		else:
-			bigsum += 0.8 * world[r][c].utility
-	else:
-		bigsum += 0.8 * world[r][c].utility
-	if c-1 >= 0:
-		if world[r][c-1] in state.adjacent:
-			bigsum += 0.1 * world[r][c-1].utility
-		else:
-			bigsum += 0.1 * world[r][c].utility
-	else:
-		bigsum += 0.1 * world[r][c].utility
-	if c+1 < len(world[0]):
-		if world[r][c+1] in state.adjacent:
-			bigsum += 0.1 * world[r][c+1].utility
-		else:
-			bigsum += 0.1 * world[r][c].utility
-	else:
-		bigsum += 0.1 * world[r][c].utility
-	if bigsum >= max_expected_util:
-		max_expected_util = bigsum
-		action = UP
-
 	# DOWN
 	bigsum = 0
 	if r+1 < len(world):
@@ -208,26 +183,82 @@ def get_action_vec(state):
 		max_expected_util = bigsum
 		action = DOWN
 
+	# UP
+	bigsum = 0
+	if r-1 >= 0:
+		if world[r-1][c] in state.adjacent:
+			bigsum += 0.8 * world[r-1][c].utility
+		else:
+			bigsum += 0.8 * world[r][c].utility
+	else:
+		bigsum += 0.8 * world[r][c].utility
+	if c-1 >= 0:
+		if world[r][c-1] in state.adjacent:
+			bigsum += 0.1 * world[r][c-1].utility
+		else:
+			bigsum += 0.1 * world[r][c].utility
+	else:
+		bigsum += 0.1 * world[r][c].utility
+	if c+1 < len(world[0]):
+		if world[r][c+1] in state.adjacent:
+			bigsum += 0.1 * world[r][c+1].utility
+		else:
+			bigsum += 0.1 * world[r][c].utility
+	else:
+		bigsum += 0.1 * world[r][c].utility
+	if bigsum >= max_expected_util:
+		max_expected_util = bigsum
+		action = UP
+
 	return (max_expected_util, action)
 
 
 
-def val_iteration(epsilon):
-	global world
+def val_iteration(epsilon,world):
 	delta = float('inf')
 	first = True
-	next_world = world
+	next_world = []
+	for i in range(len(world)):
+		next_world.append(list())
+		for j in range(len(world[0])):
+			next_world[i].append(world[i][j].utility)
 	while delta > epsilon * ((1 - DISCOUNT)/DISCOUNT):
-		delta = 0
+		delta = 0.0
 		for i in range(len(world)):
 			for j in range(len(world[0])):
-				action_vec = get_action_vec(world[i][j])
-				next_world[i][j].utility = world[i][j].reward + (DISCOUNT * action_vec[0])
-				next_world[i][j].action = action_vec[1]
-				if abs(world[i][j].utility - next_world[i][j].utility) > delta:
-					delta = abs(world[i][j].utility - next_world[i][j].utility)
-		world = next_world
+				action_vec = get_action_vec(world[i][j],world)
+				#print("Action vec: %4f , %s" % (action_vec[0],action_vec[1]))
+				#print ("Prev utility: %4f" % (world[i][j].utility))
+				next_world[i][j] = world[i][j].reward + (DISCOUNT * action_vec[0])
+				#print ("Next utility: %4f" % (world[i][j].reward + (DISCOUNT * action_vec[0])))
+				#print ("Prev utility: %4f" % (world[i][j].utility))
+				world[i][j].action = action_vec[1]
+				#print("Error: %4f" % abs(next_world[i][j]-world[i][j].utility))
+				if abs(world[i][j].utility - next_world[i][j]) > delta:
+					delta = abs(world[i][j].utility - next_world[i][j])
+					#print("new delta: %d\n\n" % delta)
+		#print(next_world)
+		for i in range(len(world)):
+			for j in range(len(world[0])):
+				world[i][j].utility = next_world[i][j]
+				#print(world[i][j].utility)
+	return world
 
+def display_results(world):
+	starts = start(world)
+	goals = goal(world)
+	state = world[starts[0]][starts[1]]
+	print("Optimal path found!\n\n")
+	while state != world[goals[0]][goals[1]]:
+		print("Location: (%d,%d)\nUtility: %.4f\nAction: %s\n\n" % (state.location[0],state.location[1],state.utility,state.action))
+		if state.action == LEFT:
+			state = world[state.location[0]][state.location[1]-1]
+		elif state.action == RIGHT:
+			state = world[state.location[0]][state.location[1]+1]
+		elif state.action == UP:
+			state = world[state.location[0]-1][state.location[1]]
+		elif state.action == DOWN:
+			state = world[state.location[0]+1][state.location[1]]
 
 
 if __name__ == "__main__":
@@ -240,6 +271,8 @@ if __name__ == "__main__":
 	args = argparser.parse_args()
 
 	w_mat = matrix_of_file(open(args.f))
-	generate_world(w_mat)
+	world = generate_world(w_mat)
 
-	val_iteration(args.e)
+	world = val_iteration(args.e,world)
+
+	display_results(world)
