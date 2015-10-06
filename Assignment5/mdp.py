@@ -3,19 +3,19 @@ import argparse
 import random
 
 # Action macros
-NOTHING = 0
-LEFT = 1
-RIGHT = 2
-UP = 3
-DOWN = 4
+NOTHING = 'nothing'
+LEFT = 'left'
+RIGHT = 'right'
+UP = 'up'
+DOWN = 'down'
 
 # Node type macros
-EMPTY = 0
-MOUNTAIN = 1
-WALL = 2
-SNAKE = 3
-BARN = 4
-APPLE = 50
+EMPTY = '0'
+MOUNTAIN = '1'
+WALL = '2'
+SNAKE = '3'
+BARN = '4'
+APPLE = '50'
 
 # Discount factor macro
 DISCOUNT = 0.9
@@ -62,12 +62,14 @@ def matrix_of_file(f):
 	return mat[0:-1]
 
 def generate_world(mat):
-	for i in range(len(mat[0])):
-		for j in range(len(mat)):
-			world[i][j] = State([i,j],mat[i][j])
+	for i in range(len(mat)):
+		world.append(list())
+		for j in range(len(mat[0])):
+			world[i].append(State([i,j],mat[i][j]))
 
 	for ii in world:
-		ii.adjacent = adjacent(ii.location)
+		for jj in ii:
+			jj.adjacent = adjacent(jj.location)
 
 # Returns the start square of the world
 def start(world):
@@ -81,13 +83,13 @@ def adjacent(location):
 	if x-1 >= 0:
 		if (world[x-1][y]).value != WALL:
 			adj.append(world[x-1][y])
-	if x+1 < len(world[0]):
+	if x+1 < len(world):
 		if (world[x+1][y]).value != WALL:
 			adj.append(world[x+1][y])
 	if y-1 >= 0:
 		if (world[x][y-1]).value != WALL:
 			adj.append(world[x][y-1])
-	if y+1 < len(world):
+	if y+1 < len(world[0]):
 		if (world[x][y+1]).value != WALL:
 			adj.append(world[x][y+1])
 	return adj
