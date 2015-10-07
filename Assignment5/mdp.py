@@ -250,15 +250,19 @@ def display_results(world):
 	state = world[starts[0]][starts[1]]
 	print("Solution found!\n")
 	while state != world[goals[0]][goals[1]]:
-		print("Location: (%d,%d)\nUtility: %.4f\nAction: %s\n" % (state.location[0],state.location[1],state.utility,state.action))
-		if state.action == LEFT:
+		#print("Location: (%d,%d)\nUtility: %.4f\nAction: %s\n" % (state.location[0],state.location[1],state.utility,state.action))
+		print("Location: (%d,%d) Utility: %.4f Action: %s" % (state.location[0],state.location[1],state.utility,state.action))
+		if state.action == LEFT and state.location[1]-1 >= 0:
 			state = world[state.location[0]][state.location[1]-1]
-		elif state.action == RIGHT:
+		elif state.action == RIGHT and state.location[1]+1 < len(world[0]):
 			state = world[state.location[0]][state.location[1]+1]
-		elif state.action == UP:
+		elif state.action == UP and state.location[0]-1 >= 0:
 			state = world[state.location[0]-1][state.location[1]]
-		elif state.action == DOWN:
+		elif state.action == DOWN and state.location[0]+1 < len(world):
 			state = world[state.location[0]+1][state.location[1]]
+		else:
+			print("Policy unlikely to reach goal...\n")
+			return
 
 
 if __name__ == "__main__":
