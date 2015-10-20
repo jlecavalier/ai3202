@@ -1,4 +1,5 @@
 import argparse
+import itertools
 
 def handle_p(p):
 	assert ((len(p) == 2) or (len(p) == 4)), "\nThere should be exactly 2 or 4 arguments provided for option -p. You provided %d...\n" % len(p)
@@ -8,9 +9,9 @@ def handle_p(p):
 		if p[0] == 'p':
 			return (float(p[1]),.3)
 		elif p[0] == '~p':
-			return (1-float(p[1]),.3)
+			return (1.0-float(p[1]),.3)
 		elif p[0] == '~s':
-			return (.9,1-float(p[1]))
+			return (.9,1.0-float(p[1]))
 		else:
 			return (.9,float(p[1]))
 	else:
@@ -21,22 +22,72 @@ def handle_p(p):
 		if p[0] == 'p' and p[2] == 's':
 			return (float(p[1]),float(p[3]))
 		elif p[0] == 'p' and p[2] == '~s':
-			return (float(p[1]),1-float(p[3]))
+			return (float(p[1]),1.0-float(p[3]))
 		elif p[0] == '~p' and p[2] == 's':
-			return (1-float(p[1]),float(p[3]))
+			return (1.0-float(p[1]),float(p[3]))
 		else:
-			return (1-float(p[3]),1-float(p[1]))
+			return (1.0-float(p[3]),1.0-float(p[1]))
 
-def handle_args(args):
-	p = handle_p(args.p)
-	return p
+class Node:
+	def __init__(self,label):
+		self.label = label
+		self.probability = 0.0
+		self.parents = []
+		self.children = []
+
+	def add_parent(self,newparent):
+		self.parents.append(newparent)
+
+	def add_child(self,newchild):
+		self.children.append(newchild)
+
+	def set_probability(self,prior):
+		self.probability = prior
+
+	def get_probability(self):
+		if len(self.parents) > 0:
+			parent_probabilities = []
+			for parent in self.parents:
+				parent_probabilities.append([parent.probability,1.0-parent.probability])
+			cprod = list(itertools.product(*parent_probabilities))
+			print(cprod)
+			bigsum = 0
+			for ii in cprod:
+				tprod = 1
+				for i in ii:
+					tprod = tprod * i
+				bigsum += tprod
+			self.probability = bigsum
+
+def generate_bnet(priors):
+	pollution = Node("pollution")
+	pollution.set_probability(priors[0])
+
+	smoker = Node("smoker")
+	smoker.set_probability(priors[1])
+
+	cancer = Node("cancer")
+	cancer.add_parent(pollution)
+	cancer.add_parent(smoker)
+	cancer.get_probability()
+	print(cancer.probability)
+
+	dyspnoea = Node("dyspnoea")
+	dyspnoea.add_parent(cancer)
+	cancer.add_child(dyspnoea)
+	dyspnoea.get_probability()
+
+	xray = Node("xray")
+	xray.add_parent(cancer)
+	cancer.add_child(xray)
+	xray.get_probability
 
 if __name__ == "__main__":
 	argparser = argparse.ArgumentParser()
 	argparser.add_argument("-p", nargs='+', help="prior values for pollution and smoker", default=("p", .9, "s", .3), required=False)
 
 	args = argparser.parse_args()
-	p = handle_args(args)
+	p = handle_p(args.p)
 	print(p)
-	#print(args.p[0][1])
-	#world = matrix_of_file(open(args.f))
+
+	bnet = generate_bnet(p)
