@@ -56,6 +56,37 @@ def handle_m(bnet, m):
 		elif i == '~x' or i == '~X':
 			print("\nMarginal probability of xray being negative: %.4f\n" % (1 - bnet[4].probability))
 
+def prob_of_string(bnet, s):
+	if s == 'p':
+		return bnet[0].probability
+	elif s == 's':
+		return bnet[1].probability
+	elif s == 'c':
+		return bnet[2].probability
+	elif s == 'd':
+		return bnet[3].probability
+	elif s == 'x':
+		return bnet[4].probability
+
+def cond_prob(bnet,query,observed):
+	if query == "p":
+		node = bnet[0]
+	elif query == "s":
+		node = bnet[1]
+	elif query == "c":
+		node = bnet[2]
+	elif query == "d":
+		node = bnet[3]
+	elif query == "x":
+		node = bnet[4]
+	if observed in node.cprobs:
+		return node.cprobs[observed]
+	else:
+		return joint_prob(bnet,query,observed) / prob_of_string(bnet, observed)
+
+def joint_prob(bnet,e1,e2):
+	return cond_prob(e1,e2) * prob_of_string(bnet, e2)
+
 class Node:
 	def __init__(self,label):
 		self.label = label
@@ -72,10 +103,12 @@ def generate_bnet(priors):
 	# Probability of low pollution was given
 	pollution = Node("pollution")
 	pollution.set_probability(priors[0])
+	pollution.set_cond_prob("s",pollution.probability)
 
 	# Probability for smoker was given.
 	smoker = Node("smoker")
 	smoker.set_probability(priors[1])
+	smoker.set_cond_prob("p",smoker.probability)
 
 	# Set probability for cancer.
 	cancer = Node("cancer")
@@ -96,6 +129,7 @@ def generate_bnet(priors):
 	x1 = cancer.probability * dyspnoea.cprobs["c"]
 	x2 = (1 - cancer.probability) * dyspnoea.cprobs["~c"]
 	dyspnoea.set_probability(x1+x2)
+	dyspnoea.set_cond_prob("x",dyspnoea.probability)
 
 	# Set probability for xray
 	xray = Node("xray")
@@ -104,6 +138,7 @@ def generate_bnet(priors):
 	x1 = cancer.probability * xray.cprobs["c"]
 	x2 = (1 - cancer.probability) * xray.cprobs["~c"]
 	xray.set_probability(x1+x2)
+	xray.set_cond_prob("d",xray.probability)
 
 	return [pollution,smoker,cancer,dyspnoea,xray]
 
