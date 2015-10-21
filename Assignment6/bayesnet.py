@@ -28,66 +28,93 @@ def handle_p(p):
 		else:
 			return (1.0-float(p[3]),1.0-float(p[1]))
 
+def handle_m(bnet, m):
+	for i in m:
+		assert i == 'p' or i == 's' or i == 'c' or i == 'd' or i == 'x' \
+		or i == '~p' or i == '~s' or i == '~c' or i == '~d' or i == '~x' \
+		or i == 'P' or i == 'S' or i == 'C' or i == 'D' or i == 'X' \
+		or i == '~P' or i == '~S' or i == '~C' or i == '~D' or i == '~X', \
+		"\nThere is no variable designated by %s\n" % i
+		if i == 'p' or i == 'P':
+			print("\nMarginal probability of low pollution: %.4f\n" % bnet[0].probability)
+		elif i == 's' or i == 'S':
+			print("\nMarginal probability of being a smoker: %.4f\n" % bnet[1].probability)
+		elif i == 'c' or i == 'C':
+			print("\nMarginal probability of having cancer: %.4f\n" % bnet[2].probability)
+		elif i == 'd' or i == 'D':
+			print("\nMarginal probability of dyspnoea: %.4f\n" % bnet[3].probability)
+		elif i == 'x' or i == 'X':
+			print("\nMarginal probability of xray being positive: %.4f\n" % bnet[4].probability)
+		elif i == '~p' or i == '~P':
+			print("\nMarginal probability of high pollution: %.4f\n" % (1 - bnet[0].probability))
+		elif i == '~s' or i == '~S':
+			print("\nMarginal probability of not being a smoker: %.4f\n" % (1 - bnet[1].probability))
+		elif i == '~c' or i == '~C':
+			print("\nMarginal probability of not having cancer: %.4f\n" % (1 - bnet[2].probability))
+		elif i == '~d' or i == '~D':
+			print("\nMarginal probability of not having dyspnoea: %.4f\n" % (1 - bnet[3].probability))
+		elif i == '~x' or i == '~X':
+			print("\nMarginal probability of xray being negative: %.4f\n" % (1 - bnet[4].probability))
+
 class Node:
 	def __init__(self,label):
 		self.label = label
 		self.probability = 0.0
-		self.parents = []
-		self.children = []
-
-	def add_parent(self,newparent):
-		self.parents.append(newparent)
-
-	def add_child(self,newchild):
-		self.children.append(newchild)
+		self.cprobs = {}
 
 	def set_probability(self,prior):
 		self.probability = prior
 
-	def get_probability(self):
-		if len(self.parents) > 0:
-			parent_probabilities = []
-			for parent in self.parents:
-				parent_probabilities.append([parent.probability,1.0-parent.probability])
-			cprod = list(itertools.product(*parent_probabilities))
-			print(cprod)
-			bigsum = 0
-			for ii in cprod:
-				tprod = 1
-				for i in ii:
-					tprod = tprod * i
-				bigsum += tprod
-			self.probability = bigsum
+	def set_cond_prob(self,s,prob):
+		self.cprobs[s] = prob
 
 def generate_bnet(priors):
+	# Probability of low pollution was given
 	pollution = Node("pollution")
 	pollution.set_probability(priors[0])
 
+	# Probability for smoker was given.
 	smoker = Node("smoker")
 	smoker.set_probability(priors[1])
 
+	# Set probability for cancer.
 	cancer = Node("cancer")
-	cancer.add_parent(pollution)
-	cancer.add_parent(smoker)
-	cancer.get_probability()
-	print(cancer.probability)
+	cancer.set_cond_prob("~p,s",.05)
+	cancer.set_cond_prob("~p,~s",.02)
+	cancer.set_cond_prob("p,s",.03)
+	cancer.set_cond_prob("p,~s",.001)
+	x1 = (1 - pollution.probability) * smoker.probability * cancer.cprobs["~p,s"]
+	x2 = (1 - pollution.probability) * (1 - smoker.probability) * cancer.cprobs["~p,~s"]
+	x3 = pollution.probability * smoker.probability * cancer.cprobs["p,s"]
+	x4 = pollution.probability * (1 - smoker.probability) * cancer.cprobs["p,~s"]
+	cancer.set_probability(x1+x2+x3+x4)
 
+	# Set probability for dyspnoea
 	dyspnoea = Node("dyspnoea")
-	dyspnoea.add_parent(cancer)
-	cancer.add_child(dyspnoea)
-	dyspnoea.get_probability()
+	dyspnoea.set_cond_prob("c",.65)
+	dyspnoea.set_cond_prob("~c",.3)
+	x1 = cancer.probability * dyspnoea.cprobs["c"]
+	x2 = (1 - cancer.probability) * dyspnoea.cprobs["~c"]
+	dyspnoea.set_probability(x1+x2)
 
+	# Set probability for xray
 	xray = Node("xray")
-	xray.add_parent(cancer)
-	cancer.add_child(xray)
-	xray.get_probability
+	xray.set_cond_prob("c",.9)
+	xray.set_cond_prob("~c",.2)
+	x1 = cancer.probability * xray.cprobs["c"]
+	x2 = (1 - cancer.probability) * xray.cprobs["~c"]
+	xray.set_probability(x1+x2)
+
+	return [pollution,smoker,cancer,dyspnoea,xray]
 
 if __name__ == "__main__":
 	argparser = argparse.ArgumentParser()
 	argparser.add_argument("-p", nargs='+', help="prior values for pollution and smoker", default=("p", .9, "s", .3), required=False)
+	argparser.add_argument("-m", nargs='*', help="marginal probability for a variable", default="", required=False)
 
 	args = argparser.parse_args()
 	p = handle_p(args.p)
-	print(p)
 
 	bnet = generate_bnet(p)
+
+	handle_m(bnet,args.m)
