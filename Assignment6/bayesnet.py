@@ -1,34 +1,6 @@
-import argparse
-import itertools
+import argparse, itertools, getopt, sys
 
-def handle_p(p):
-	assert ((len(p) == 2) or (len(p) == 4)), "\nThere should be exactly 2 or 4 arguments provided for option -p. You provided %d...\n" % len(p)
-	assert p[0] == 'p' or p[0] == 's' or p[0] == '~p' or p[0] == '~s', "\nFirst argument for option -p should be p/~p for pollution or s/~s for smoker. You chose %s...\n" % p[0]
-	assert float(p[1]) >= 0 and float(p[1]) <= 1, "\nSecond argument for option -p should be a float between 0 and 1. Yours is %.4f...\n" % float(p[1])
-	if len(p) == 2:
-		if p[0] == 'p':
-			return (float(p[1]),.3)
-		elif p[0] == '~p':
-			return (1.0-float(p[1]),.3)
-		elif p[0] == '~s':
-			return (.9,1.0-float(p[1]))
-		else:
-			return (.9,float(p[1]))
-	else:
-		assert float(p[3]) >= 0 and float(p[3]) <= 1, "\nFourth argument for option -p should be a float between 0 and 1. Yours is %.4f...\n" % float(p[3])
-		assert p[0] != p[2], "\nYou can't set the prior value for p or s twice!\n"
-		assert not (p[0] == 'p' and p[2] == '~p') and not (p[0] == '~p' and p[2] == 'p'), "\nYou can't set the prior value for p and ~p\n"
-		assert not (p[0] == 's' and p[2] == '~s') and not (p[0] == '~s' and p[2] == 's'), "\nYou can't set the prior value for s and ~s\n"
-		if p[0] == 'p' and p[2] == 's':
-			return (float(p[1]),float(p[3]))
-		elif p[0] == 'p' and p[2] == '~s':
-			return (float(p[1]),1.0-float(p[3]))
-		elif p[0] == '~p' and p[2] == 's':
-			return (1.0-float(p[1]),float(p[3]))
-		else:
-			return (1.0-float(p[3]),1.0-float(p[1]))
-
-def handle_m(bnet, m):
+def calcMarginal(bnet, m):
 	for i in m:
 		assert i == 'p' or i == 's' or i == 'c' or i == 'd' or i == 'x' \
 		or i == '~p' or i == '~s' or i == '~c' or i == '~d' or i == '~x' \
@@ -45,16 +17,6 @@ def handle_m(bnet, m):
 			print("\nMarginal probability of dyspnoea: %.4f\n" % bnet[3].probability)
 		elif i == 'x' or i == 'X':
 			print("\nMarginal probability of xray being positive: %.4f\n" % bnet[4].probability)
-		elif i == '~p' or i == '~P':
-			print("\nMarginal probability of high pollution: %.4f\n" % (1 - bnet[0].probability))
-		elif i == '~s' or i == '~S':
-			print("\nMarginal probability of not being a smoker: %.4f\n" % (1 - bnet[1].probability))
-		elif i == '~c' or i == '~C':
-			print("\nMarginal probability of not having cancer: %.4f\n" % (1 - bnet[2].probability))
-		elif i == '~d' or i == '~D':
-			print("\nMarginal probability of not having dyspnoea: %.4f\n" % (1 - bnet[3].probability))
-		elif i == '~x' or i == '~X':
-			print("\nMarginal probability of xray being negative: %.4f\n" % (1 - bnet[4].probability))
 
 def prob_of_string(bnet, s):
 	if s == 'p':
@@ -143,13 +105,45 @@ def generate_bnet(priors):
 	return [pollution,smoker,cancer,dyspnoea,xray]
 
 if __name__ == "__main__":
-	argparser = argparse.ArgumentParser()
-	argparser.add_argument("-p", nargs='+', help="prior values for pollution and smoker", default=("p", .9, "s", .3), required=False)
-	argparser.add_argument("-m", nargs='*', help="marginal probability for a variable", default="", required=False)
+	priors = [0.9,0.3]
+	print("Hello?")
 
-	args = argparser.parse_args()
-	p = handle_p(args.p)
+	try:
+		opts, args = getopt.getopt(sys.argv[1:], "m:g:j:p:")
+		for o, a in opts:
+			if o in ("-p"):
+				print "flag", o
+				print "args", a
+				print a[0]
+				print float(a[1:])
+				if a[0] == "P" or a[0] == "p":
+					priors[0] = float(a[1:])
+				elif a[0] == "S" or a[0] == "s":
+					priors[1] = float(a[1:])
+				bnet = generate_bnet(priors)
+			elif o in ("-m"):
+				print "flag", o
+				print "args", a
+				print type(a)
+				calcMarginal(bnet, a)
+			elif o in ("-g"):
+				print "flag", o
+				print "args", a
+				print type(a)
+				'''you may want to parse a here and pass the left of |
+				and right of | as arguments to calcConditional
+				'''
+				p = a.find("|")
+				print a[:p]
+				print a[p+1:]
+				#calcConditional(a[:p], a[p+1:])
+			elif o in ("-j"):
+				print "flag", o
+				print "args", a
+			else:
+				assert False, "unhandled option"
 
-	bnet = generate_bnet(p)
-
-	handle_m(bnet,args.m)
+	except getopt.GetoptError as err:
+		# print help information and exit:
+		print str(err) # will print something like "option -a not recognized"
+        sys.exit(2)
