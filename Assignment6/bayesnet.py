@@ -30,6 +30,10 @@ def calcConditional(e1,e2):
 			p1 = .03 * e1.parents[0].probability
 			p2 = .05 * (1 - e1.parents[0].probability)
 			return p1 + p2
+		elif e1.label == "cancer" and e2[0].label == "pollution":
+			p1 = .03 * e1.parents[1].probability
+			p2 = .001 * (1 - e1.parents[1].probability)
+			return p1 + p2
 		elif e1.label == "cancer" and e2[0].label == "dyspnoea":
 			num = .65 * e1.probability
 			den = (.65 * e1.probability) + (.3 * (1 - e1.probability))
@@ -53,18 +57,99 @@ def calcConditional(e1,e2):
 			pnot = p1 + p2
 			den = (calcConditional(e2[0],[e1]) * e1.probability) + (pnot * (1 - e1.probability))
 			return num/den
+		elif e1.label == "pollution" and e2[0].label == "xray":
+			num = calcConditional(e2[0],[e1]) * e1.probability
+			psmoke = e2[0].parents[0].parents[1].probability
+			p1 = .9 * ((psmoke * .05) + ((1-psmoke) * .02))
+			p2 = .2 * ((psmoke * .95) + ((1-psmoke) * .98))
+			pnot = p1 + p2
+			den = (calcConditional(e2[0],[e1]) * e1.probability) + (pnot * (1 - e1.probability))
+			return num/den
+		elif e1.label == "smoker" and e2[0].label == "cancer":
+			num = calcConditional(e2[0],[e1]) * e1.probability
+			p1 = .001 * e2[0].parents[0].probability
+			p2 = .02 * (1 - e2[0].parents[0].probability)
+			pnot = p1 + p2
+			den = (calcConditional(e2[0],[e1]) * e1.probability) + (pnot * (1 - e1.probability))
+			return num/den
 		elif e1.label == "smoker" and e2[0].label == "dyspnoea":
 			num = calcConditional(e2[0],[e1]) * e1.probability
 			ppol = e2[0].parents[0].parents[0].probability
 			p1 = .65 * ((ppol * .001) + ((1-ppol) * .02))
-			p2 = .3 * ((psmoke * .999) + ((1-ppol) * .98))
+			p2 = .3 * ((ppol * .999) + ((1-ppol) * .98))
 			pnot = p1 + p2
 			den = (calcConditional(e2[0],[e1]) * e1.probability) + (pnot * (1 - e1.probability))
 			return num/den
+		elif e1.label == "xray" and e2[0].label == "dyspnoea":
+			p1 = .9 * calcConditional(e1.parents[0],e2)
+			pnot = (1 - calcConditional(e1.parents[0],e2))
+			p2 = .2 * pnot
+			return p1 + p2
+		elif e1.label == "xray" and e2[0].label == "cancer":
+			return .9
+		elif e1.label == "xray" and e2[0].label == "smoker":
+			p1 = calcConditional(e1.parents[0],e2) * .9
+			p2 = (1 - calcConditional(e1.parents[0],e2)) * .2
+			return p1 + p2
+		elif e1.label == "xray" and e2[0].label == "pollution":
+			p1 = calcConditional(e1.parents[0],e2) * .9
+			p2 = (1 - calcConditional(e1.parents[0],e2)) * .2
+			return p1 + p2
+		elif e1.label == "dyspnoea" and e2[0].label == "cancer":
+			return .65
+		elif e1.label == "dyspnoea" and e2[0].label == "smoker":
+			p1 = calcConditional(e1.parents[0],e2) * .65
+			p2 = (1 - calcConditional(e1.parents[0],e2)) * .3
+			return p1 + p2
+		elif e1.label == "dyspnoea" and e2[0].label == "pollution":
+			p1 = calcConditional(e1.parents[0],e2) * .65
+			p2 = (1 - calcConditional(e1.parents[0],e2)) * .3
+			return p1 + p2
 		else:
 			return 0
+	elif len(e2) == 2:
+		if (e1.label == "pollution" and e2[0].label == "cancer" and e2[1].label == "smoker") \
+			or (e1.label == "pollution" and e2[0].label == "smoker" and e2[1].label == "cancer"):
+			num = .03 * e1.probability
+			den = num + (.05 * (1-e1.probability))
+			return num/den
+		elif (e1.label == "pollution" and e2[0].label == "dyspnoea" and e2[1].label == "smoker") \
+			or (e1.label == "pollution" and e2[0].label == "smoker" and e2[1].label == "dyspnoea"):
+			return 1-.102
+		elif (e1.label == "smoker" and e2[0].label == "cancer" and e2[1].label == "smoker") \
+			or (e1.label == "smoker" and e2[0].label == "smoker" and e2[1].label == "cancer"):
+			return 1
+		elif (e1.label == "smoker" and e2[0].label == "dyspnoea" and e2[1].label == "smoker") \
+			or (e1.label == "smoker" and e2[0].label == "smoker" and e2[1].label == "dyspnoea"):
+			return 1
+		elif (e1.label == "cancer" and e2[0].label == "cancer" and e2[1].label == "smoker") \
+			or (e1.label == "cancer" and e2[0].label == "smoker" and e2[1].label == "cancer"):
+			return 1
+		elif (e1.label == "cancer" and e2[0].label == "dyspnoea" and e2[1].label == "smoker") \
+			or (e1.label == "cancer" and e2[0].label == "smoker" and e2[1].label == "dyspnoea"):
+			return .067
+		elif (e1.label == "xray" and e2[0].label == "cancer" and e2[1].label == "smoker") \
+			or (e1.label == "xray" and e2[0].label == "smoker" and e2[1].label == "cancer"):
+			return .9
+		elif (e1.label == "xray" and e2[0].label == "dyspnoea" and e2[1].label == "smoker") \
+			or (e1.label == "xray" and e2[0].label == "smoker" and e2[1].label == "dyspnoea"):
+			return .247
+		elif (e1.label == "dyspnoea" and e2[0].label == "cancer" and e2[1].label == "smoker") \
+			or (e1.label == "dyspnoea" and e2[0].label == "smoker" and e2[1].label == "cancer"):
+			return .65
+		elif (e1.label == "dyspnoea" and e2[0].label == "dyspnoea" and e2[1].label == "smoker") \
+			or (e1.label == "dyspnoea" and e2[0].label == "smoker" and e2[1].label == "dyspnoea"):
+			return 1
+		else:
+			return 0
+	else:
+		return 0
 
-
+def calcJoint(e1,e2):
+	if len(e2) == 1:
+		return calcConditional(e1,e2) * e2[0].probability
+	else:
+		return calcConditional(e1,e2) * calcJoint(e2[0],e2[1:])
 
 class Node:
 	def __init__(self,label):
@@ -156,7 +241,18 @@ if __name__ == "__main__":
 				s2 = e2[0].label
 				for i in range(1,len(e2)):
 					s2 = s2 + (", %s"%(e2[i].label))
-				print("Conditional probability of %s given %s: %.4f" %(s1,s2,cp)) 
+				print("\nConditional probability of %s given %s: %.4f\n" %(s1,s2,cp))
+			elif o in ("-j"):
+				e1 = stringToNode(bnet,a[0])
+				e2 = []
+				for i in a[1:]:
+					e2.append(stringToNode(bnet,i))
+				jp = calcJoint(e1,e2)
+				s1 = e1.label
+				s2 = e2[0].label
+				for i in range(1,len(e2)):
+					s2 = s2 + (", %s"%(e2[i].label))
+				print("\nJoint probability of %s and %s: %.4f\n" %(s1,s2,jp))
 			else:
 				assert False, "unhandled option"
 
