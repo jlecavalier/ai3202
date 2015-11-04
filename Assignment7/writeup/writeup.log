@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2015.10.14)  4 NOV 2015 12:11
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2015.10.14)  4 NOV 2015 12:33
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -187,10 +187,6 @@ LaTeX Font Info:    Try loading font information for U+msb on input line 8.
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-Underfull \hbox (badness 10000) in paragraph at lines 8--9
-
- []
-
 
 Package Fancyhdr Warning: \headheight is too small (12.0pt): 
  Make it at least 47.85004pt.
@@ -199,21 +195,24 @@ Package Fancyhdr Warning: \headheight is too small (12.0pt):
 
 [1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}
 
-] (./writeup.aux) ) 
+] [2] (./writeup.aux) ) 
 Here is how much of TeX's memory you used:
- 1553 strings out of 493304
- 19390 string characters out of 6139870
- 80665 words of memory out of 5000000
- 5033 multiletter control sequences out of 15000+600000
- 8637 words of font info for 33 fonts, out of 8000000 for 9000
+ 1558 strings out of 493304
+ 19450 string characters out of 6139870
+ 85665 words of memory out of 5000000
+ 5036 multiletter control sequences out of 15000+600000
+ 9113 words of font info for 35 fonts, out of 8000000 for 9000
  957 hyphenation exceptions out of 8191
- 30i,11n,43p,220b,226s stack positions out of 5000i,500n,10000p,200000b,80000s
-</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/c
-m/cmr12.pfb>
-Output written on writeup.pdf (1 page, 13027 bytes).
+ 29i,11n,43p,428b,362s stack positions out of 5000i,500n,10000p,200000b,80000s
+</usr/share/texlive/texmf-dist/fonts/type1/public/amsfon
+ts/cm/cmbx12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/
+cmmi12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.
+pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></
+usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt12.pfb>
+Output written on writeup.pdf (2 pages, 60893 bytes).
 PDF statistics:
- 12 PDF objects out of 1000 (max. 8388607)
- 7 compressed objects within 1 object stream
+ 31 PDF objects out of 1000 (max. 8388607)
+ 21 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 
