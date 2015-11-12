@@ -7,7 +7,17 @@ class Hmm:
   	self.tran_probs = []
   	print("Done!\n\nGenerating initial probabilities...")
   	self.init_probs = []
-  	print("Done!\n\n")
+  	print("Done!\n")
+  	self.verify_probs()
+
+  def verify_probs(self):
+	print("Checking whether all probabilities are distributed normally...")
+  	for i in range(26):
+  	  prob = 0.0
+	  for j in range(26):
+	    prob += self.emis_probs[i+(26*j)][1]
+	  assert (abs(1 - prob) <= 0.000000000000001)
+	print("Everything okay!\n")
 
 def generate_emis_probs(data,obs):
   emis_probs = []
