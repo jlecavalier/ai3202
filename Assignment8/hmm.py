@@ -7,7 +7,7 @@ class Hmm:
   	print("Done!\n\nGenerating transition probabilities...")
   	self.tran_probs = generate_tran_probs(data)
   	print("Done!\n\nGenerating initial probabilities...")
-  	self.init_probs = []
+  	self.init_probs = generate_init_probs(data)
   	print("Done!\n")
 
     # Afterwards, we verify that our results actually make up
@@ -20,9 +20,11 @@ class Hmm:
   # the big sum of P(S2|S1) should sum to exactly one.
   def verify_probs(self):
     print("Checking whether all probabilities are distributed properly...")
+    i_prob = 0.0
     for i in range(26):
       e_prob = 0.0
       t_prob = 0.0
+      i_prob += self.init_probs[i][1]
       for j in range(26):
         e_prob += self.emis_probs[i+(j*26)][1]
         t_prob += self.tran_probs[i+(j*26)][1]
@@ -30,20 +32,43 @@ class Hmm:
       # we allow the distribution sums to differ from 1 by at most 10^(-15)
       assert (abs(1-e_prob) <= 0.000000000000001)
       assert (abs(1-t_prob) <= 0.000000000000001)
+    assert (abs(1-i_prob) <= 0.000000000000001)
     print("Everything okay!\n")
 
   # This function displays all of our probabilities in a nice table.
   # The table doesn't look very nice in a terminal, so you should probably
   # pipe it to an output file...
   def display_table(self):
-    print("|\tS1\t|\tS2\t|\tP(S2|S1) (Emission Probability)\t|\tP(S2|S1)Transition Probability")
+    print("Writing probabilities to a file...")
+    f_emis = open('emission_probabilities.data', 'w+')
+    f_emis.write("P(Et | Xt)\n\n")
+    f_tran = open('transition_probabilities.data', 'w+')
+    f_tran.write("P(Xt+1 | Xt)\n\n")
+    f_init = open('initial_probabilities.data', 'w+')
+    f_init.write("P(X)\n\n")
     for i in range(26):
+      f_init.write("P(%s) = %.5f\n" % (self.init_probs[i][0],self.init_probs[i][1]))
       for j in range(26):
         o = self.emis_probs[(j*26)+i][0][0]
         s = self.emis_probs[(j*26)+i][0][1]
         pe = self.emis_probs[(j*26)+i][1]
         pt = self.tran_probs[(j*26)+i][1]
-        print("|\t%s\t|\t%s\t|\t%.5f\t \t \t \t \t \t \t|\t%.5f" % (s,o,pe,pt))
+        f_emis.write("P(%s | %s) = %.5f\n" % (o,s,pe))
+        f_tran.write("P(%s | %s) = %.5f\n" % (o,s,pt))
+    print("Done!\n")
+
+# Calculate the initial probability of each letter
+def generate_init_probs(data):
+  init_probs = []
+  for i in range(97,123):
+    l_count = 0
+    for j in range(len(data)):
+      if data[j] == chr(i):
+        l_count += 1
+    (num,den) = laplace_smoothing(l_count,len(data))
+    p = float(num) / float(den)
+    init_probs.append([chr(i),p])
+  return init_probs
 
 # Generates all the emission probabilities
 def generate_emis_probs(data,obs):
