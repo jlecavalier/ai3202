@@ -17,7 +17,7 @@ def vtxt(o,emis,tran,v):
   	i_tran = [x for x in tran if x[0][0] == chr(i+97)]
   	to_max = []
   	for j in range(len(i_tran)):
-  	  p = log(emis[i][1]) + log(i_tran[j][1]) + v[i]
+  	  p = log(emis[i][1]) + log(i_tran[j][1]) + v[j]
   	  to_max.append(p)
   	res.append(max(to_max))
   return res
@@ -33,6 +33,13 @@ def viterbi(obs,hmm):
   print("Done!")
   return v
 
+def display_sequence(v):
+  f = open('dump.data', 'w+')
+  f2 = open('dump2.data', 'w+')
+  for ii in v:
+    f.write("%c" % chr(ii.index(max(ii))+97))
+    f2.write("%.40f\n" % max(ii))
+
 if __name__ == "__main__":
   (data,obs) = get_data_and_obs(open("typos20.data"))
   assert len(data) == len(obs)
@@ -43,3 +50,4 @@ if __name__ == "__main__":
   t_obs = t_obs[1:]
   assert len(t_data) == len(t_obs)
   v = viterbi(t_obs,hmm)
+  display_sequence(v)
