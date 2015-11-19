@@ -131,14 +131,19 @@ def laplace_smoothing(num_out,num_pos):
 def get_data_and_obs(f):
   data = []
   obs = []
+  spaces = []
+  scount = -3
   for line in f:
-  	if line[0] != "_":
-  	  data.append(line[0])
-  	  obs.append(line[2])
-  return (data,obs)
+    scount += 1
+    if line[0] != "_":
+      data.append(line[0])
+      obs.append(line[2])
+    else:
+      spaces.append(scount-len(spaces))
+  return (data,obs,spaces)
 
 if __name__ == "__main__":
-  (data,obs) = get_data_and_obs(open("typos20.data"))
+  (data,obs,spaces) = get_data_and_obs(open("typos20.data"))
   assert len(data) == len(obs)
   hmm = Hmm(data,obs)
   hmm.display_table()

@@ -30,24 +30,41 @@ def viterbi(obs,hmm):
   for o in obs[1:]:
   	o_emis = [x for x in emis if x[0][0] == o]
   	v.append(vtxt(o,o_emis,tran,v[-1]))
-  print("Done!")
+  print("Done!\n")
   return v
 
-def display_sequence(v):
-  f = open('dump.data', 'w+')
-  f2 = open('dump2.data', 'w+')
-  for ii in v:
-    f.write("%c" % chr(ii.index(max(ii))+97))
-    f2.write("%.40f\n" % max(ii))
+def reconstruct_text(v,spaces):
+  print("Reconstructing original text based on observations...")
+  f = open('reconstructed.data', 'w+')
+  predictions = []
+  for i in range(len(v)):
+    predictions.append(chr(v[i].index(max(v[i]))+97))
+    if i in spaces:
+      f.write("%c " % chr(v[i].index(max(v[i]))+97))
+    else:
+      f.write("%c" % chr(v[i].index(max(v[i]))+97))
+  print("Written to file 'reconstructed.data'\n")
+  return predictions
+
+def analyze_error(predictions,t_data):
+  print("Analyzing error made during document reconstruction...")
+  assert len(predictions) == len(t_data)
+  correct = 0
+  for i in range(len(predictions)):
+    if predictions[i] == t_data[i]:
+      correct += 1
+  percentage = 100.0 * (float(correct)/float(len(predictions)))
+  print("The reconstructed document is %.2f percent correct\n" % percentage)
 
 if __name__ == "__main__":
-  (data,obs) = get_data_and_obs(open("typos20.data"))
+  (data,obs,spaces_trash) = get_data_and_obs(open("typos20.data"))
   assert len(data) == len(obs)
   hmm = Hmm(data,obs)
 
-  (t_data,t_obs) = get_data_and_obs(open("typos20Test.data"))
+  (t_data,t_obs,spaces) = get_data_and_obs(open("typos20Test.data"))
   t_data = t_data[1:]
   t_obs = t_obs[1:]
   assert len(t_data) == len(t_obs)
   v = viterbi(t_obs,hmm)
-  display_sequence(v)
+  predictions = reconstruct_text(v,spaces)
+  analyze_error(predictions,t_data)
